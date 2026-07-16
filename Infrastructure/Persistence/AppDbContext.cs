@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using IssueTracker.Models;
+using Domain.Entities;
 
-namespace IssueTracker.Data;
+namespace Infrastructure.Persistence;
 
 public class AppDbContext : DbContext
 {

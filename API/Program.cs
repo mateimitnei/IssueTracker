@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using IssueTracker.Data;
-using IssueTracker.Models;
+using Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
