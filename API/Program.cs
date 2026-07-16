@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Infrastructure.Persistence;
+using IssueTracker.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,5 +21,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 // TO DO: Endpoints
+app.MapGroup("/api/tickets").MapTicketEndpoints();
 
 app.Run();
