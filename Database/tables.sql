@@ -1,0 +1,61 @@
+IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'IssueTrackerDb')
+BEGIN
+    CREATE DATABASE IssueTrackerDb;
+END
+GO
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'TicketStatus')
+BEGIN
+    CREATE TABLE TicketStatus (
+        Id TINYINT IDENTITY(1,1) PRIMARY KEY,
+        Name NVARCHAR(20) NOT NULL
+    );
+END
+GO
+
+INSERT INTO TicketStatus (Name) VALUES ('TODO'), ('IN PROGRESS'), ('IN REVIEW'), ('DONE');
+GO
+
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'TicketPriority')
+BEGIN
+    CREATE TABLE TicketPriority (
+        Id TINYINT IDENTITY(1,1) PRIMARY KEY,
+        Name NVARCHAR(20) NOT NULL
+    );
+END
+GO
+INSERT INTO TicketPriority (Name) VALUES ('LOW'), ('MEDIUM'), ('HIGH');
+GO
+
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Ticket')
+BEGIN
+    CREATE TABLE Ticket (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        TicketKey NVARCHAR(100) UNIQUE,
+        Title NVARCHAR(100) NOT NULL,
+        Description NVARCHAR(1000),
+        CreatedAt DATETIME2 NOT NULL,
+        StatusId TINYINT NOT NULL DEFAULT 1,
+        PriorityId TINYINT NOT NULL DEFAULT 2,
+        
+        FOREIGN KEY (StatusId) REFERENCES TicketStatus(Id),
+        FOREIGN KEY (PriorityId) REFERENCES TicketPriority(Id)
+    );
+END
+GO
+
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Ticket')
+BEGIN
+    CREATE TABLE Ticket (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        TicketId NVARCHAR(100) UNIQUE,
+        TicketTitle NVARCHAR(100) NOT NULL,
+        TicketStatusId TINYINT NOT NULL DEFAULT 1,
+        TicketPriorityId TINYINT NOT NULL DEFAULT 2,
+        TicketModifiedAt DATETIME2 NOT NULL,
+    
+        FOREIGN KEY (TicketId) REFERENCES Ticket(Id),
+        FOREIGN KEY (TicketStatusId) REFERENCES TicketStatus(Id),
+        FOREIGN KEY (TicketPriorityId) REFERENCES TicketPriority(Id)
+    );
+END
+GO
