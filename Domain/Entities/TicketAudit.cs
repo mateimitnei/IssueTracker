@@ -3,7 +3,7 @@ namespace Domain.Entities;
 public class TicketAudit
 {
     public int Id { get; set; }
-    public int TicketId { get; set; }
+    public string TicketKey { get; set; }
     public string TicketTitle { get; set; } = string.Empty;
     public string? TicketDescription { get; set; }
     public DateTime TicketModifiedAt { get; set; }

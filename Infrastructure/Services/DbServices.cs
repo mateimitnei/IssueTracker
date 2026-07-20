@@ -2,6 +2,7 @@ using Application.DTOs;
 using Domain.Entities;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 
 namespace Infrastructure.Services;
 
@@ -16,34 +17,35 @@ public class DbServices {
     {
         if (string.IsNullOrWhiteSpace(dto.Title))
             throw new ArgumentException("Title is required.");
+        if (dto.Title.Length > 100)
+            throw new ArgumentException("Title must be less than 100 characters.");
+        if (string.IsNullOrWhiteSpace(dto.Description))
+            throw new ArgumentException("Description is required.");
+
+        var results = await _db.Database.SqlQueryRaw<CreateTicketResponseDto>(
+                "EXEC sp_CreateTicket @Title, @Description, @PriorityId",
+                new SqlParameter("@Title", dto.Title),
+                new SqlParameter("@Description", dto.Description),
+                new SqlParameter("@PriorityId", dto.PriorityId))
+            .ToListAsync();
         
-        if (dto.PriorityId is < TicketPriorityType.LOW or > TicketPriorityType.HIGH)
-            throw new ArgumentException("Priority must be 1, 2 or 3.");
-
-        var nextKey = await GetNextTicketKeyAsync();
-
-        var ticket = new Ticket
-        {
-            TicketKey = $"TK-{nextKey}",
-            Title = dto.Title,
-            Description = dto.Description,
-            CreatedAt = DateTime.UtcNow,
-            StatusId = (byte) TicketStatusType.TODO,
-            PriorityId = (byte) dto.PriorityId
-        };
-
-        await _db.Tickets.AddAsync(ticket);
-        await _db.SaveChangesAsync();
+        var result = results.FirstOrDefault();
+        if (result == null)
+            throw new Exception("Failed to create ticket");
 
         return new TicketDto(
-            ticket.Id,
-            ticket.TicketKey,
-            ticket.Title,
-            ticket.Description,
-            ticket.CreatedAt,
+            result.Id,
+            result.TicketKey,
+            dto.Title,
+            dto.Description,
+            DateTime.UtcNow,
             TicketStatusType.TODO.ToString(),
             dto.PriorityId.ToString());
     }
+    
+    // public async Task<TicketDto> UpdateAsync(UpdateTicketDto dto) {
+    //
+    // }
 
     public async Task<List<TicketDto>> GetAllAsync()
     {
@@ -94,11 +96,11 @@ public class DbServices {
             return [];
 
         return await _db.TicketAudits
-            .Where(a => a.TicketId == ticket.Id)
+            .Where(a => a.TicketKey == ticket.TicketKey)
             .OrderByDescending(a => a.TicketModifiedAt)
             .Select(t => new TicketAuditDto(
                 t.Id,
-                t.TicketId,
+                t.TicketKey,
                 t.TicketTitle,
                 t.TicketDescription,
                 t.TicketModifiedAt,

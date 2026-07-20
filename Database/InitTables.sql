@@ -42,7 +42,7 @@ BEGIN
         TicketKey NVARCHAR(100) UNIQUE,
         Title NVARCHAR(100) NOT NULL,
         Description NVARCHAR(1000),
-        CreatedAt DATETIME2 NOT NULL,
+        CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
         StatusId TINYINT NOT NULL DEFAULT 1,
         PriorityId TINYINT NOT NULL DEFAULT 2,
         
@@ -56,15 +56,15 @@ IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Ticke
 BEGIN
     CREATE TABLE TicketAudit (
         Id INT IDENTITY(1,1) PRIMARY KEY,
-        TicketId INT NOT NULL, -- TicketId cannot be UNIQUE; otherwise, each ticket could only have a single entry in the Audit table
-        TicketTitle NVARCHAR(100) NOT NULL,
+        TicketKey NVARCHAR(100) NOT NULL, -- TicketId cannot be UNIQUE; otherwise, each ticket could only have a single entry in the Audit table
+        TicketTitle NVARCHAR(100) NOT NULL CHECK (LEN(TicketTitle) <= 100),
         TicketDescription NVARCHAR(1000), -- New column
         TicketStatusId TINYINT NOT NULL DEFAULT 1,
         TicketPriorityId TINYINT NOT NULL DEFAULT 2,
         TicketModifiedAt DATETIME2 NOT NULL,
         TicketModificationType NVARCHAR(20) NOT NULL, -- New column
     
-        FOREIGN KEY (TicketId) REFERENCES Ticket(Id),
+        FOREIGN KEY (TicketKey) REFERENCES Ticket(TicketKey),
         FOREIGN KEY (TicketStatusId) REFERENCES TicketStatus(Id),
         FOREIGN KEY (TicketPriorityId) REFERENCES TicketPriority(Id)
     );
@@ -88,9 +88,9 @@ GO
 -- Add audit history only if the table is completely empty
 IF NOT EXISTS (SELECT 1 FROM TicketAudit)
 BEGIN
-    INSERT INTO TicketAudit (TicketId, TicketTitle, TicketDescription, TicketStatusId, TicketPriorityId, TicketModifiedAt, TicketModificationType)
+    INSERT INTO TicketAudit (TicketKey, TicketTitle, TicketDescription, TicketStatusId, TicketPriorityId, TicketModifiedAt, TicketModificationType)
     VALUES 
-    (1, 'Setare structura initiala', 'Creare foldere, straturi si solutie', 1, 3, DATEADD(day, -2, GETDATE()), 'UPDATE'),
-    (1, 'Setare structura initiala', 'Creare foldere, straturi si solutie', 2, 3, DATEADD(day, -1, GETDATE()), 'UPDATE');
+    ('TK-101', 'Setare structura initiala', 'Creare foldere, straturi si solutie', 1, 3, DATEADD(day, -2, GETDATE()), 'UPDATE'),
+    ('TK-101', 'Setare structura initiala', 'Creare foldere, straturi si solutie', 2, 3, DATEADD(day, -1, GETDATE()), 'UPDATE');
 END
 GO
