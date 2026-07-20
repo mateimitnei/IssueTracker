@@ -4,6 +4,8 @@ public sealed record TicketAuditDto(
     int Id,
     int TicketId,
     string TicketTitle,
+    string? TicketDescription,
     DateTime TicketModifiedAt,
+    string TicketModificationType,
     string Status,
     string Priority);

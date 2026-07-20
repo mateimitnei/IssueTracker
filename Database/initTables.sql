@@ -58,9 +58,11 @@ BEGIN
         Id INT IDENTITY(1,1) PRIMARY KEY,
         TicketId INT NOT NULL, -- TicketId cannot be UNIQUE; otherwise, each ticket could only have a single entry in the Audit table
         TicketTitle NVARCHAR(100) NOT NULL,
+        TicketDescription NVARCHAR(1000), -- New column
         TicketStatusId TINYINT NOT NULL DEFAULT 1,
         TicketPriorityId TINYINT NOT NULL DEFAULT 2,
         TicketModifiedAt DATETIME2 NOT NULL,
+        TicketModificationType NVARCHAR(20) NOT NULL, -- New column
     
         FOREIGN KEY (TicketId) REFERENCES Ticket(Id),
         FOREIGN KEY (TicketStatusId) REFERENCES TicketStatus(Id),
@@ -86,9 +88,9 @@ GO
 -- Add audit history only if the table is completely empty
 IF NOT EXISTS (SELECT 1 FROM TicketAudit)
 BEGIN
-    INSERT INTO TicketAudit (TicketId, TicketTitle, TicketStatusId, TicketPriorityId, TicketModifiedAt)
+    INSERT INTO TicketAudit (TicketId, TicketTitle, TicketDescription, TicketStatusId, TicketPriorityId, TicketModifiedAt, TicketModificationType)
     VALUES 
-    (1, 'Setare structura initiala', 1, 3, DATEADD(day, -2, GETDATE())),
-    (1, 'Setare structura initiala', 2, 3, DATEADD(day, -1, GETDATE()));
+    (1, 'Setare structura initiala', 'Creare foldere, straturi si solutie', 1, 3, DATEADD(day, -2, GETDATE()), 'UPDATE'),
+    (1, 'Setare structura initiala', 'Creare foldere, straturi si solutie', 2, 3, DATEADD(day, -1, GETDATE()), 'UPDATE');
 END
 GO

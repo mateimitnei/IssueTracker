@@ -100,7 +100,9 @@ public class DbServices {
                 t.Id,
                 t.TicketId,
                 t.TicketTitle,
+                t.TicketDescription,
                 t.TicketModifiedAt,
+                t.TicketModificationType,
                 t.Status.Name,
                 t.Priority.Name))
             .ToListAsync();
