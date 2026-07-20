@@ -3,17 +3,10 @@ using Infrastructure.Services;
 
 namespace IssueTracker.Endpoints;
 
-public static class TicketEndpoints
+public static class TicketReadEndpoints
 {
-    public static RouteGroupBuilder MapTicketEndpoints(this RouteGroupBuilder group)
+    public static RouteGroupBuilder MapTicketReadEndpoints(this RouteGroupBuilder group)
     {
-        group.MapPost("/", async (DbServices dbs, CreateTicketDto dto) =>
-        {
-            // GlobalExceptionHandler catches the error dbs.CreateAsync throws
-            TicketDto ticket = await dbs.CreateAsync(dto);
-            return Results.Created($"/api/tickets/{ticket.TicketKey}", ticket);
-        });
-        
         group.MapGet("/", async (DbServices dbs) =>
         {
             List<TicketDto> tickets = await dbs.GetAllAsync();
@@ -30,18 +23,6 @@ public static class TicketEndpoints
             }
 
             return Results.Ok(ticket);
-        });
-        
-        group.MapDelete("/{ticketKey}", async (string ticketKey, DbServices dbs) =>
-        {
-            bool deleted = await dbs.DeleteAsync(ticketKey);
-            
-            if (!deleted)
-            {
-                throw new KeyNotFoundException($"Try again with a valid ticket key: {ticketKey}");
-            }
-
-            return Results.Ok($"Ticket with key {ticketKey} was successfully deleted!");
         });
 
         group.MapGet("/{ticketKey}/audit", async (string ticketKey, DbServices dbs) =>

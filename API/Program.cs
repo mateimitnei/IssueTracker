@@ -29,6 +29,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGroup("/tickets").MapTicketEndpoints();
+var ticketsGroup = app.MapGroup("/tickets");
+
+ticketsGroup.MapTicketReadEndpoints();
+ticketsGroup.MapTicketWriteEndpoints();
 
 app.Run();
