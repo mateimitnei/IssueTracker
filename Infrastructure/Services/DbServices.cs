@@ -22,25 +22,18 @@ public class DbServices {
         if (string.IsNullOrWhiteSpace(dto.Description))
             throw new ArgumentException("Description is required.");
 
-        var results = await _db.Database.SqlQueryRaw<CreateTicketResponseDto>(
+        var results = await _db.Database.SqlQueryRaw<TicketDto>(
                 "EXEC sp_CreateTicket @Title, @Description, @PriorityId",
                 new SqlParameter("@Title", dto.Title),
                 new SqlParameter("@Description", dto.Description),
                 new SqlParameter("@PriorityId", dto.PriorityId))
             .ToListAsync();
-        
+
         var result = results.FirstOrDefault();
         if (result == null)
             throw new Exception("Failed to create ticket");
 
-        return new TicketDto(
-            result.Id,
-            result.TicketKey,
-            dto.Title,
-            dto.Description,
-            DateTime.UtcNow,
-            TicketStatusType.TODO.ToString(),
-            dto.PriorityId.ToString());
+        return result;
     }
     
     // public async Task<TicketDto> UpdateAsync(UpdateTicketDto dto) {

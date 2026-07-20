@@ -32,8 +32,15 @@ BEGIN
             VALUES (@NewTicketKey, @Title, @Description, @PriorityId, 1, GETDATE());
         COMMIT TRAN;
         
-        -- Return the ticket id and key to the API
-        SELECT CAST(SCOPE_IDENTITY() AS INT) AS Id, @NewTicketKey AS TicketKey;
+        -- Return the new ticket as a TicketDto
+        SELECT
+            CAST(SCOPE_IDENTITY() AS INT) AS Id,
+            @NewTicketKey AS TicketKey,
+            @Title AS Title,
+            @Description AS Description,
+            GETDATE() AS CreatedAt,
+            'TODO' AS Status,
+            (SELECT Name FROM TicketPriority WHERE Id = @PriorityId) AS Priority
     
     END TRY
     BEGIN CATCH
