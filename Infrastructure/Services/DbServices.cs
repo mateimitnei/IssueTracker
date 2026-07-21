@@ -34,13 +34,13 @@ public class DbServices {
         return result;
     }
 
-    public async Task<TicketDto> UpdateAsync(UpdateTicketDto dto) {
-        if (string.IsNullOrWhiteSpace(dto.TicketKey))
+    public async Task<TicketDto> UpdateAsync(string ticketKey, UpdateTicketDto dto) {
+        if (string.IsNullOrWhiteSpace(ticketKey))
             throw new ArgumentException("TicketKey is required.");
     
         var results = await _db.Database.SqlQueryRaw<TicketDto>(
                 "EXEC sp_UpdateTicket @TicketKey, @Title, @Description, @StatusId, @PriorityId",
-                new SqlParameter("@TicketKey", dto.TicketKey),
+                new SqlParameter("@TicketKey", ticketKey),
                 new SqlParameter("@Title", (object?)dto.Title ?? DBNull.Value),
                 new SqlParameter("@Description", (object?)dto.Description ?? DBNull.Value),
                 new SqlParameter("@StatusId", (object?)dto.StatusId ?? DBNull.Value),
