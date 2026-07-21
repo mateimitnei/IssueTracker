@@ -27,13 +27,6 @@ public static class TicketReadEndpoints
 
         group.MapGet("/{ticketKey}/audit", async (string ticketKey, DbServices dbs) =>
         {
-            TicketDto? ticket = await dbs.GetTicketAsync(ticketKey);
-            
-            if (ticket == null)
-            {
-                throw new KeyNotFoundException($"Try again with a valid ticket key: {ticketKey}");
-            }
-
             List<TicketAuditDto> audits = await dbs.GetAuditAsync(ticketKey);
             
             if (audits.Count == 0)
