@@ -136,6 +136,7 @@ BEGIN
             DELETE FROM Ticket WHERE TicketKey = @TicketKey;  -- Delete AFTER audit
         COMMIT TRAN;
 
+        SELECT CAST(1 AS bit);
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0

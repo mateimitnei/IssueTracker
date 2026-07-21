@@ -19,8 +19,6 @@ public class DbServices {
             throw new ArgumentException("Title is required.");
         if (dto.Title.Length > 100)
             throw new ArgumentException("Title must be less than 100 characters.");
-        if (string.IsNullOrWhiteSpace(dto.Description))
-            throw new ArgumentException("Description is required.");
 
         var results = await _db.Database.SqlQueryRaw<TicketDto>(
                 "EXEC sp_CreateTicket @Title, @Description, @PriorityId",
@@ -73,16 +71,11 @@ public class DbServices {
         return tickets.FirstOrDefault();
     }
 
-    public async Task<bool> DeleteAsync(string ticketKey)
+    public async Task DeleteAsync(string ticketKey)
     {
-        var foundTicket = await _db.Tickets.FirstOrDefaultAsync(t => t.TicketKey == ticketKey);
-
-        if (foundTicket == null)
-            return false;
-
-        _db.Tickets.Remove(foundTicket);
-        await _db.SaveChangesAsync();
-        return true;
+        await _db.Database.ExecuteSqlRawAsync(
+            "EXEC sp_DeleteTicket @TicketKey",
+            new SqlParameter("@TicketKey", ticketKey));
     }
 
     public async Task<List<TicketAuditDto>> GetAuditAsync(string ticketKey)

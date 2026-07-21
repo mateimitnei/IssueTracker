@@ -22,10 +22,7 @@ public static class TicketWriteEndpoints
 
         group.MapDelete("/{ticketKey}", async (string ticketKey, DbServices dbs) =>
         {
-            bool deleted = await dbs.DeleteAsync(ticketKey);
-            if (!deleted) {
-                throw new KeyNotFoundException($"Ticket with key {ticketKey} does not exist!");
-            }
+            await dbs.DeleteAsync(ticketKey);
             return Results.Ok($"Ticket with key {ticketKey} was successfully deleted!");
         });
 
