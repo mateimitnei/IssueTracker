@@ -37,6 +37,8 @@ public class DbServices {
     public async Task<TicketDto> UpdateAsync(string ticketKey, UpdateTicketDto dto) {
         if (string.IsNullOrWhiteSpace(ticketKey))
             throw new ArgumentException("TicketKey is required.");
+        if (dto.Title != null && dto.Title.Length > 100)
+            throw new ArgumentException("Title must be less than 100 characters.");
     
         var results = await _db.Database.SqlQueryRaw<TicketDto>(
                 "EXEC sp_UpdateTicket @TicketKey, @Title, @Description, @StatusId, @PriorityId",
