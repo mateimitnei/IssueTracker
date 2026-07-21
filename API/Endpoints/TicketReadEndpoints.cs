@@ -43,6 +43,13 @@ public static class TicketReadEndpoints
 
             return Results.Ok(audits);
         });
+        
+        // Bonus
+        group.MapGet("/stats", async (DbServices dbs) =>
+        {
+            var stats = await dbs.GetTicketStatsAsync();
+            return Results.Ok(stats);
+        });
 
         return group;
     }

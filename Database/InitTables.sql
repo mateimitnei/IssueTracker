@@ -39,10 +39,10 @@ IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Ticke
 BEGIN
     CREATE TABLE Ticket (
         Id INT IDENTITY(1,1) PRIMARY KEY,
-        TicketKey NVARCHAR(100) UNIQUE,
+        TicketKey NVARCHAR(100),
         Title NVARCHAR(100) NOT NULL,
         Description NVARCHAR(1000),
-        CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedAt DATETIME2 NOT NULL,
         StatusId TINYINT NOT NULL DEFAULT 1,
         PriorityId TINYINT NOT NULL DEFAULT 2,
         
@@ -57,14 +57,15 @@ BEGIN
     CREATE TABLE TicketAudit (
         Id INT IDENTITY(1,1) PRIMARY KEY,
         TicketId INT NOT NULL, -- TicketId cannot be UNIQUE; otherwise, each ticket could only have a single entry in the Audit table
-        TicketKey NVARCHAR(100) NOT NULL,
-        TicketTitle NVARCHAR(100) NOT NULL CHECK (LEN(TicketTitle) <= 100),
+        TicketKey NVARCHAR(100),
+        TicketTitle NVARCHAR(100) NOT NULL,
         TicketDescription NVARCHAR(1000), -- New column
         TicketStatusId TINYINT NOT NULL DEFAULT 1,
         TicketPriorityId TINYINT NOT NULL DEFAULT 2,
         TicketModifiedAt DATETIME2 NOT NULL,
         TicketModificationType NVARCHAR(20) NOT NULL, -- New column
-
+    
+        -- FOREIGN KEY (TicketId) REFERENCES Ticket(Id),
         FOREIGN KEY (TicketStatusId) REFERENCES TicketStatus(Id),
         FOREIGN KEY (TicketPriorityId) REFERENCES TicketPriority(Id)
     );
