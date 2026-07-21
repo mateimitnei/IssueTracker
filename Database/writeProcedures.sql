@@ -61,8 +61,8 @@ CREATE PROCEDURE sp_UpdateTicket
     @TicketKey NVARCHAR(100),
     @Title NVARCHAR(100) = NULL,
     @Description NVARCHAR(1000) = NULL,
-    @PriorityId INT = NULL,
-    @StatusId INT = NULL
+    @StatusId INT = NULL,
+    @PriorityId INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
