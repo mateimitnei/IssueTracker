@@ -47,31 +47,20 @@ public class DbServices {
 
     public async Task<List<TicketDto>> GetAllAsync()
     {
-        return await _db.Tickets
-            .Select(t => new TicketDto(
-                t.Id,
-                t.TicketKey,
-                t.Title,
-                t.Description,
-                t.CreatedAt,
-                t.Status.Name,
-                t.Priority.Name))
+        // SQL View
+        return await _db.Database
+            .SqlQuery<TicketDto>($"SELECT * FROM vw_TicketDetails")
             .ToListAsync();
     }
 
     public async Task<TicketDto?> GetTicketAsync(string ticketKey)
     {
-        return await _db.Tickets
-            .Where(t => t.TicketKey == ticketKey)
-            .Select(t => new TicketDto(
-                t.Id,
-                t.TicketKey,
-                t.Title,
-                t.Description,
-                t.CreatedAt,
-                t.Status.Name,
-                t.Priority.Name))
-            .FirstOrDefaultAsync();
+        // SQL sp_GetTicketByKey
+        var tickets = await _db.Database
+            .SqlQuery<TicketDto>($"EXEC sp_GetTicketByKey @TicketKey = {ticketKey}")
+            .ToListAsync();
+
+        return tickets.FirstOrDefault();
     }
 
     public async Task<bool> DeleteAsync(string ticketKey)
@@ -93,18 +82,9 @@ public class DbServices {
         if (ticket == null)
             return [];
 
-        return await _db.TicketAudits
-            .Where(a => a.TicketId == ticket.Id)
-            .OrderByDescending(a => a.TicketModifiedAt)
-            .Select(t => new TicketAuditDto(
-                t.Id,
-                t.TicketId,
-                t.TicketTitle,
-                t.TicketDescription,
-                t.TicketModifiedAt,
-                t.TicketModificationType,
-                t.Status.Name,
-                t.Priority.Name))
+        // SQL sp_GetTicketAuditLog
+        return await _db.Database
+            .SqlQuery<TicketAuditDto>($"EXEC sp_GetTicketAuditLog @TicketKey = {ticketKey}")
             .ToListAsync();
     }
 
@@ -122,5 +102,12 @@ public class DbServices {
             .Max();
 
         return maxValue + 1;
+    }
+    
+    public async Task<List<TicketStatsDto>> GetTicketStatsAsync()
+    {
+        return await _db.Database
+            .SqlQuery<TicketStatsDto>($"EXEC sp_GetTicketStats")
+            .ToListAsync();
     }
 }
