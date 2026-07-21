@@ -2,6 +2,7 @@ using Application.DTOs;
 using Domain.Entities;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 
 namespace Infrastructure.Services;
 
@@ -16,33 +17,42 @@ public class DbServices {
     {
         if (string.IsNullOrWhiteSpace(dto.Title))
             throw new ArgumentException("Title is required.");
-        
-        if (dto.PriorityId is < TicketPriorityType.LOW or > TicketPriorityType.HIGH)
-            throw new ArgumentException("Priority must be 1, 2 or 3.");
+        if (dto.Title.Length > 100)
+            throw new ArgumentException("Title must be less than 100 characters.");
+        if (string.IsNullOrWhiteSpace(dto.Description))
+            throw new ArgumentException("Description is required.");
 
-        var nextKey = await GetNextTicketKeyAsync();
+        var results = await _db.Database.SqlQueryRaw<TicketDto>(
+                "EXEC sp_CreateTicket @Title, @Description, @PriorityId",
+                new SqlParameter("@Title", dto.Title),
+                new SqlParameter("@Description", dto.Description),
+                new SqlParameter("@PriorityId", dto.PriorityId))
+            .ToListAsync();
 
-        var ticket = new Ticket
-        {
-            TicketKey = $"TK-{nextKey}",
-            Title = dto.Title,
-            Description = dto.Description,
-            CreatedAt = DateTime.UtcNow,
-            StatusId = (byte) TicketStatusType.TODO,
-            PriorityId = (byte) dto.PriorityId
-        };
+        var result = results.FirstOrDefault();
+        if (result == null)
+            throw new Exception("Failed to create ticket");
 
-        await _db.Tickets.AddAsync(ticket);
-        await _db.SaveChangesAsync();
+        return result;
+    }
 
-        return new TicketDto(
-            ticket.Id,
-            ticket.TicketKey,
-            ticket.Title,
-            ticket.Description,
-            ticket.CreatedAt,
-            TicketStatusType.TODO.ToString(),
-            dto.PriorityId.ToString());
+    public async Task<TicketDto> UpdateAsync(UpdateTicketDto dto) {
+        if (string.IsNullOrWhiteSpace(dto.TicketKey))
+            throw new ArgumentException("TicketKey is required.");
+    
+        var results = await _db.Database.SqlQueryRaw<TicketDto>(
+                "EXEC sp_UpdateTicket @TicketKey, @Title, @Description, @StatusId, @PriorityId",
+                new SqlParameter("@TicketKey", dto.TicketKey),
+                new SqlParameter("@Title", (object?)dto.Title ?? DBNull.Value),
+                new SqlParameter("@Description", (object?)dto.Description ?? DBNull.Value),
+                new SqlParameter("@StatusId", (object?)dto.StatusId ?? DBNull.Value),
+                new SqlParameter("@PriorityId", (object?)dto.PriorityId ?? DBNull.Value))
+            .ToListAsync();
+    
+        var result = results.FirstOrDefault();
+        if (result == null)
+            throw new Exception("Failed to update ticket");
+        return result;
     }
 
     public async Task<List<TicketDto>> GetAllAsync()

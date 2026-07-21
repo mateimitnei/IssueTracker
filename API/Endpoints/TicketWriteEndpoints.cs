@@ -14,16 +14,18 @@ public static class TicketWriteEndpoints
         });
         
         // TODO: PATCH
+        group.MapPatch("/{ticketKey}", async (DbServices dbs, UpdateTicketDto dto) =>
+        {
+            TicketDto ticket = await dbs.UpdateAsync(dto);
+            return Results.Ok(ticket);
+        });
 
         group.MapDelete("/{ticketKey}", async (string ticketKey, DbServices dbs) =>
         {
             bool deleted = await dbs.DeleteAsync(ticketKey);
-            
-            if (!deleted)
-            {
-                throw new KeyNotFoundException($"Try again with a valid ticket key: {ticketKey}");
+            if (!deleted) {
+                throw new KeyNotFoundException($"Ticket with key {ticketKey} does not exist!");
             }
-
             return Results.Ok($"Ticket with key {ticketKey} was successfully deleted!");
         });
 
