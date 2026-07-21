@@ -57,7 +57,7 @@ BEGIN
     CREATE TABLE TicketAudit (
         Id INT IDENTITY(1,1) PRIMARY KEY,
         TicketId INT NOT NULL, -- TicketId cannot be UNIQUE; otherwise, each ticket could only have a single entry in the Audit table
-        TicketKey NVARCHAR(100) UNIQUE,
+        TicketKey NVARCHAR(100),
         TicketTitle NVARCHAR(100) NOT NULL,
         TicketDescription NVARCHAR(1000), -- New column
         TicketStatusId TINYINT NOT NULL DEFAULT 1,
