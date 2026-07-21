@@ -35,10 +35,25 @@ public class DbServices {
 
         return result;
     }
+
+    public async Task<TicketDto> UpdateAsync(UpdateTicketDto dto) {
+        if (string.IsNullOrWhiteSpace(dto.TicketKey))
+            throw new ArgumentException("TicketKey is required.");
     
-    // public async Task<TicketDto> UpdateAsync(UpdateTicketDto dto) {
-    //
-    // }
+        var results = await _db.Database.SqlQueryRaw<TicketDto>(
+                "EXEC sp_UpdateTicket @TicketKey, @Title, @Description, @StatusId, @PriorityId",
+                new SqlParameter("@TicketKey", dto.TicketKey),
+                new SqlParameter("@Title", (object?)dto.Title ?? DBNull.Value),
+                new SqlParameter("@Description", (object?)dto.Description ?? DBNull.Value),
+                new SqlParameter("@StatusId", (object?)dto.StatusId ?? DBNull.Value),
+                new SqlParameter("@PriorityId", (object?)dto.PriorityId ?? DBNull.Value))
+            .ToListAsync();
+    
+        var result = results.FirstOrDefault();
+        if (result == null)
+            throw new Exception("Failed to update ticket");
+        return result;
+    }
 
     public async Task<List<TicketDto>> GetAllAsync()
     {
@@ -89,11 +104,11 @@ public class DbServices {
             return [];
 
         return await _db.TicketAudits
-            .Where(a => a.TicketKey == ticket.TicketKey)
+            .Where(a => a.TicketId == ticket.Id)
             .OrderByDescending(a => a.TicketModifiedAt)
             .Select(t => new TicketAuditDto(
                 t.Id,
-                t.TicketKey,
+                t.TicketId,
                 t.TicketTitle,
                 t.TicketDescription,
                 t.TicketModifiedAt,

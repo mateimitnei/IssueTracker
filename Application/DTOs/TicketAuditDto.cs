@@ -2,7 +2,7 @@ namespace Application.DTOs;
 
 public sealed record TicketAuditDto(
     int Id,
-    string TicketKey,
+    int TicketId,
     string TicketTitle,
     string? TicketDescription,
     DateTime TicketModifiedAt,

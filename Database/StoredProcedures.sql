@@ -34,13 +34,17 @@ BEGIN
         
         -- Return the new ticket as a TicketDto
         SELECT
-            CAST(SCOPE_IDENTITY() AS INT) AS Id,
-            @NewTicketKey AS TicketKey,
-            @Title AS Title,
-            @Description AS Description,
-            GETDATE() AS CreatedAt,
-            'TODO' AS Status,
-            (SELECT Name FROM TicketPriority WHERE Id = @PriorityId) AS Priority
+            t.Id,
+            t.TicketKey,
+            t.Title,
+            t.Description,
+            t.CreatedAt,
+            s.Name AS Status,
+            p.Name AS Priority
+        FROM Ticket t
+             JOIN TicketStatus s ON s.Id = t.StatusId
+             JOIN TicketPriority p ON p.Id = t.PriorityId
+        WHERE t.TicketKey = @NewTicketKey;
     
     END TRY
     BEGIN CATCH
@@ -74,8 +78,8 @@ BEGIN
             THROW 50004, 'Invalid status type.', 1;
     
         BEGIN TRAN;
-            INSERT INTO TicketAudit (TicketKey, TicketTitle, TicketDescription, TicketStatusId, TicketPriorityId, TicketModifiedAt, TicketModificationType)
-            SELECT TicketKey, Title, Description, StatusId, PriorityId, GETDATE(), 'UPDATE'
+            INSERT INTO TicketAudit (TicketId, TicketKey, TicketTitle, TicketDescription, TicketStatusId, TicketPriorityId, TicketModifiedAt, TicketModificationType)
+            SELECT Id, TicketKey, Title, Description, StatusId, PriorityId, GETDATE(), 'UPDATE'
             FROM Ticket
             WHERE TicketKey = @TicketKey;
         
@@ -88,7 +92,20 @@ BEGIN
             WHERE TicketKey = @TicketKey;
             
         COMMIT TRAN;
-    
+
+        SELECT
+            t.Id,
+            t.TicketKey,
+            t.Title,
+            t.Description,
+            t.CreatedAt,
+            s.Name AS Status,
+            p.Name AS Priority
+        FROM Ticket t
+             JOIN TicketStatus s ON s.Id = t.StatusId
+             JOIN TicketPriority p ON p.Id = t.PriorityId
+        WHERE t.TicketKey = @TicketKey;
+
     END TRY
     BEGIN CATCH
         -- Rollback only if there was a transaction started
@@ -111,8 +128,8 @@ BEGIN
             THROW 50002, 'Ticket not found.', 1;
 
         BEGIN TRAN;
-            INSERT INTO TicketAudit (TicketKey, TicketTitle, TicketDescription, TicketStatusId, TicketPriorityId, TicketModifiedAt, TicketModificationType)
-            SELECT TicketKey, Title, Description, StatusId, PriorityId, GETDATE(), 'DELETE'
+            INSERT INTO TicketAudit (TicketId, TicketKey, TicketTitle, TicketDescription, TicketStatusId, TicketPriorityId, TicketModifiedAt, TicketModificationType)
+            SELECT Id, TicketKey, Title, Description, StatusId, PriorityId, GETDATE(), 'DELETE'
             FROM Ticket
             WHERE TicketKey = @TicketKey;
             

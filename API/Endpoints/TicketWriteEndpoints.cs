@@ -14,6 +14,11 @@ public static class TicketWriteEndpoints
         });
         
         // TODO: PATCH
+        group.MapPatch("/{ticketKey}", async (DbServices dbs, UpdateTicketDto dto) =>
+        {
+            TicketDto ticket = await dbs.UpdateAsync(dto);
+            return Results.Ok(ticket);
+        });
 
         group.MapDelete("/{ticketKey}", async (string ticketKey, DbServices dbs) =>
         {
