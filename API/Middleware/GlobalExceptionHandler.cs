@@ -32,6 +32,10 @@ public class GlobalExceptionHandler : IExceptionHandler
                 statusCode = StatusCodes.Status400BadRequest;
                 title = "One or more validation errors occurred.";
                 break;
+            case SqlException ex when ex.Number == 50005:
+                statusCode = StatusCodes.Status400BadRequest;
+                title = "One or more validation errors occurred.";
+                break;
             case KeyNotFoundException:
                 statusCode = StatusCodes.Status404NotFound;
                 title = "The requested resource could not be found.";

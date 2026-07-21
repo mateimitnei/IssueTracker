@@ -70,6 +70,9 @@ BEGIN
     BEGIN TRY
         IF NOT EXISTS (SELECT 1 FROM Ticket WHERE TicketKey = @TicketKey)
             THROW 50002, 'Ticket not found.', 1;
+            
+        IF @Title IS NOT NULL AND LEN(@Title) > 100
+            THROW 50005, 'Title must be less than 100 characters.', 1;
 
         IF @PriorityId IS NOT NULL AND NOT EXISTS (SELECT 1 FROM TicketPriority WHERE Id = @PriorityId)
             THROW 50003, 'Invalid priority type.', 1;
