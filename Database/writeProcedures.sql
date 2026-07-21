@@ -1,14 +1,10 @@
 DROP PROCEDURE IF EXISTS sp_CreateTicket;
 DROP PROCEDURE IF EXISTS sp_UpdateTicket;
 DROP PROCEDURE IF EXISTS sp_DeleteTicket;
-DROP SEQUENCE IF EXISTS seq_TicketNumber;
+
 GO
 
-CREATE SEQUENCE seq_TicketNumber
-    AS INT
-    START WITH 105
-    INCREMENT BY 1;
-GO
+
 
 -- Create ticket --
 CREATE PROCEDURE sp_CreateTicket

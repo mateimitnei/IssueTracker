@@ -7,6 +7,13 @@ GO
 USE IssueTrackerDb;
 GO
 
+DROP SEQUENCE IF EXISTS seq_TicketNumber;
+CREATE SEQUENCE seq_TicketNumber
+    AS INT
+    START WITH 105
+    INCREMENT BY 1;
+GO
+
 -- Create and populate lookup tables
 
 IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'TicketStatus')
@@ -39,7 +46,7 @@ IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Ticke
 BEGIN
     CREATE TABLE Ticket (
         Id INT IDENTITY(1,1) PRIMARY KEY,
-        TicketKey NVARCHAR(100),
+        TicketKey NVARCHAR(100) NOT NULL UNIQUE,
         Title NVARCHAR(100) NOT NULL,
         Description NVARCHAR(1000),
         CreatedAt DATETIME2 NOT NULL,
