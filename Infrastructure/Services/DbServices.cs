@@ -77,9 +77,9 @@ public class DbServices {
 
     public async Task<List<TicketAuditDto>> GetAuditAsync(string ticketKey)
     {
-        var ticket = await _db.Tickets.FirstOrDefaultAsync(t => t.TicketKey == ticketKey);
+        var ticketAudit = await _db.TicketAudits.FirstOrDefaultAsync(t => t.TicketKey == ticketKey);
 
-        if (ticket == null)
+        if (ticketAudit == null)
             return [];
 
         // SQL sp_GetTicketAuditLog

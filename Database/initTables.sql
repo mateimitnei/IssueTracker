@@ -39,7 +39,7 @@ IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Ticke
 BEGIN
     CREATE TABLE Ticket (
         Id INT IDENTITY(1,1) PRIMARY KEY,
-        TicketKey NVARCHAR(100) UNIQUE,
+        TicketKey NVARCHAR(100),
         Title NVARCHAR(100) NOT NULL,
         Description NVARCHAR(1000),
         CreatedAt DATETIME2 NOT NULL,
@@ -65,7 +65,7 @@ BEGIN
         TicketModifiedAt DATETIME2 NOT NULL,
         TicketModificationType NVARCHAR(20) NOT NULL, -- New column
     
-        FOREIGN KEY (TicketId) REFERENCES Ticket(Id),
+        -- FOREIGN KEY (TicketId) REFERENCES Ticket(Id),
         FOREIGN KEY (TicketStatusId) REFERENCES TicketStatus(Id),
         FOREIGN KEY (TicketPriorityId) REFERENCES TicketPriority(Id)
     );
