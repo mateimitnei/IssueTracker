@@ -1,17 +1,32 @@
-# Issue Tracker Web API — Specificație Proiect
+# Issue Tracker Web API — Ticket Management System
 
-## 1. Tehnologii și Arhitectură
+## Requirements
 
-- **Framework:** .NET Core folosind Minimal API.
-- **Documentație API:** Integrare cu Swagger pentru apelarea ușoară a endpoint-urilor.
-- **Organizare Cod:** Structurarea endpoint-urilor folosind clase statice.
-- **Gestionarea Erorilor:** Implementarea unui sistem centralizat.
+- .NET 10.0 SDK
+- Microsoft SQL Server 2025
 
-## 2. Nomenclatoare
+## How to run the project
+
+1. Create a new SQL Server.
+2. Run the following database init and stored procedures scripts: [Database init](Database/InitTables.sql), 
+[Read Procedures](Database/ReadProcedures.sql), [Write Procedures](Database/WriteProcedures.sql).
+3. Fill in the `DefaultConnection` string in `appsettings.json` with the connection string for your local SQL Server.
+4. Run the `API` project using `dotnet run` or through your IDE.
+
+# Project Specification
+
+## 1. Technologies and Architecture
+
+- **Framework:** .NET Core using Minimal API.
+- **API Documentation:** Swagger integration for easy calling of endpoints.
+- **Code Organization:** Structuring endpoints using static classes.
+- **Error Handling:** Implementation of a centralized system.
+
+## 2. Lookup Tables
 
 ### TicketStatus (byte)
 
-| Valoare | Semnificație |
+| Value | Meaning |
 |---------|--------------|
 | `1`     | TO DO        |
 | `2`     | IN PROGRESS  |
@@ -20,168 +35,151 @@
 
 ### TicketPriority (byte)
 
-| Valoare | Semnificație |
+| Value | Meaning |
 |---------|--------------|
 | `1`     | LOW          |
 | `2`     | MEDIUM       |
 | `3`     | HIGH         |
 
-## 3. Endpoint-uri API
+## 3. API Endpoints
 
-### 3.1. Adăugare Tichet — `POST`
+### 3.1. Add Ticket — `POST`
 
-Endpoint pentru adăugarea unui issue în baza de date.
+Endpoint for adding an issue to the database.
 
-- **Entitatea `Ticket` (în BD):** `Id` (int, identity), `TicketKey` (string), `Title` (string), `Description` (string), `CreatedAt` (DateTime), `StatusId` (byte), `PriorityId` (byte).
-- **DTO (Data Transfer Object):** Utilizatorul trimite strict `Title`, `Description` și `PriorityId`.
-- **Validări și reguli de salvare:**
-  - `Title`: nu poate fi `NULL`/`EMPTY` și nu trebuie să depășească 100 de caractere.
-  - `TicketKey`: șir de caractere unic în sistem (generat din cod sau validat ca unic, ex: `"TK-101"`).
-  - `CreatedAt`: se setează automat în momentul procesării (nu este cerut de la utilizator).
-  - `StatusId`: se setează automat la valoarea `1` (TO DO).
-- **Erori:** la o prioritate invalidă, se returnează `400 Bad Request` folosind formatul standard `ProblemDetails`.
+- **`Ticket` Entity (in DB):** `Id` (int, identity), `TicketKey` (string), `Title` (string), `Description` (string), `CreatedAt` (DateTime), `StatusId` (byte), `PriorityId` (byte).
+- **DTO (Data Transfer Object):** The user sends only `Title`, `Description`, and `PriorityId`.
+- **Validations and saving rules:**
+    - `Title`: cannot be `NULL`/`EMPTY` and must not exceed 100 characters.
+    - `TicketKey`: unique string in the system (generated from code or validated as unique, e.g.: `"TK-101"`).
+    - `CreatedAt`: automatically set at the time of processing (not requested from the user).
+    - `StatusId`: automatically set to the value `1` (TO DO).
+- **Errors:** for an invalid priority, a `400 Bad Request` is returned using the standard `ProblemDetails` format.
 
-### 3.2. Editare Tichet — `PATCH`
+### 3.2. Edit Ticket — `PATCH`
 
-Endpoint pentru editarea unui tichet, identificat unic prin `TicketKey` primit ca parametru în calea URL-ului (path).
+Endpoint for editing a ticket, uniquely identified by the `TicketKey` received as a parameter in the URL path.
 
-- **Regulă strictă:** proprietățile `TicketKey` și `CreatedAt` NU pot fi editate.
+- **Strict rule:** the `TicketKey` and `CreatedAt` properties CANNOT be edited.
 
-### 3.3. Preluare Toate Tichetele — `GET`
+### 3.3. Get All Tickets — `GET`
 
-Endpoint pentru a aduce din baza de date lista completă a tichetelor salvate.
+Endpoint to retrieve the complete list of saved tickets from the database.
 
-### 3.4. Preluare Tichet Specific — `GET`
+### 3.4. Get Specific Ticket — `GET`
 
-Endpoint pentru returnarea unui singur tichet, bazat pe `TicketKey` din path.
+Endpoint to return a single ticket, based on the `TicketKey` from the path.
 
-- **Erori:** dacă tichetul nu este găsit, aplicația returnează `404 Not Found` (conform contractului REST).
+- **Errors:** if the ticket is not found, the application returns `404 Not Found` (according to the REST contract).
 
-### 3.5. Ștergere Tichet — `DELETE`
+### 3.5. Delete Ticket — `DELETE`
 
-Endpoint care șterge un tichet existent, folosind ca identificator `TicketKey` din path.
+Endpoint that deletes an existing ticket, using the `TicketKey` from the path as an identifier.
 
-## 4. Cerințe de Audit (Istoric)
+## 4. Audit Requirements (History)
 
-- **Monitorizare:** orice adăugare sau modificare de tichet necesită salvarea versiunii precedente într-o tabelă de log (ex: `TicketAudit`).
-- **Date reținute:** tabela va înregistra datele vechi (ex: `OldStatusId`, `OldTitle`, `ModificationDate`).
-- **Endpoint dedicat (`GET`):** permite vizualizarea log-ului (istoricului) pentru un anumit `TicketKey` primit în path.
+- **Monitoring:** any modification or deletion of a ticket requires saving the previous version in a log table (e.g.: `TicketAudit`).
+- **Retained data:** the table will record the old data (e.g.: `OldStatusId`, `OldTitle`, `ModificationDate`).
+- **Dedicated endpoint (`GET`):** allows viewing the log (history) for a specific `TicketKey` received in the path.
 
-## 5. Bază de Date
+## 5. Database
 
-- **Sistem:** SQL Server.
-- **Tabele necesare:** `TicketStatus`, `TicketPriority`, `Ticket`, `TicketAudit`.
-- **Relații:** tabelele trebuie legate prin Foreign Keys (chei externe) conform structurii.
-- **Abordare (Database-First):** se încurajează scrierea scripturilor SQL manual, aplicând direct la nivelul bazei de date constrângeri precum `UNIQUE`, `NOT NULL` și `DEFAULT`.
+- **System:** SQL Server.
+- **Required tables:** `TicketStatus`, `TicketPriority`, `Ticket`, `TicketAudit`.
+- **Relationships:** the tables must be linked by Foreign Keys according to the structure.
+- **Approach (Database-First):** it is encouraged to manually write SQL scripts, directly applying constraints such as `UNIQUE`, `NOT NULL`, and `DEFAULT` at the database level.
 
 ---
 
-# Cerință Suplimentară — Ticket Management API (Flux de Lucru pe Echipă)
+# Additional Requirement — Ticket Management API
 
-## Context și Obiectiv
+## Context and Objective
 
-Cerința inițială (Minimal API cu Route Groups, Global Error Handling și Swagger, entitățile `Ticket`, `TicketStatus`, `TicketPriority`, `TicketAudit`) rămâne neschimbată ca bază funcțională. Acest document o împarte în **două fluxuri de lucru paralele**, astfel încât fiecare intern să poată lucra independent.
+The initial requirement (Minimal API with Route Groups, Global Error Handling and Swagger, the entities `Ticket`, `TicketStatus`, `TicketPriority`, `TicketAudit`) remains unchanged as a functional base. This document divides it into **two parallel workflows**.
 
-Pe lângă cerințele funcționale, fiecare flux conține cerințe explicite de SQL — proceduri stocate, join-uri, view-uri, tranzacții și indexuri.
+Besides the functional requirements, each workflow contains explicit SQL requirements — stored procedures, joins, views, transactions, and indexes.
 
-## Arhitectura Comună (se stabilește împreună înainte de împărțirea task-urilor)
+## Common Architecture
 
-Înainte de a separa task-urile, echipa trebuie să cadă de acord și să livreze împreună, ca fundație:
+1. The .NET solution structure, with a Web API project and separate folders for `endpoints`, `dtos`, `data`, and `middleware`.
+2. The initial SQL script for creating the database, which contains the reference tables `TicketStatus` and `TicketPriority`, populated with the fixed values from the requirement.
+3. The database connection convention — EF Core Database First.
+4. The Global Error Handling middleware, a single handler used by both, which maps exceptions to `ProblemDetails` with the codes `400`, `404`, `409`, and `500`.
+5. The Swagger configuration, common for all endpoints, regardless of who writes them.
 
-1. Structura soluției .NET, cu proiect Web API și foldere separate pentru `endpoints`, `dtos`, `data` și `middleware`.
-2. Scriptul SQL inițial de creare a bazei de date, care conține tabelele de nomenclator `TicketStatus` și `TicketPriority`, populate cu valorile fixe din cerință.
-3. Convenția de conectare la baza de date — fie prin `Microsoft.Data.SqlClient`, fie prin EF Core Database First — aleasă o singură dată pentru tot proiectul.
-4. Middleware-ul de Global Error Handling, un singur handler folosit de amândoi, care mapează excepțiile la `ProblemDetails` cu codurile `400`, `404`, `409` și `500`.
-5. Configurarea Swagger, comună pentru toate endpoint-urile, indiferent cine le scrie.
+## A — Ticket Lifecycle (Create, Update, Delete)
 
-## Persoana A — Ticket Lifecycle (Create, Update, Delete)
+A is responsible for everything related to **writing** to the database.
 
-A este responsabil de tot ce înseamnă **scriere** în baza de date.
+### Endpoints A
 
-### Endpoint-uri A
+- **Endpoint 1 — `POST tickets`:** ticket creation from a DTO containing `Title`, `Description`, and `PriorityId`.
+    - Validates `Title` (not null/empty, max 100 characters).
+    - Generates a unique `TicketKey`.
+    - `StatusId` is automatically set to `1`, and `CreatedAt` to the current date and time.
+    - Invalid `PriorityId` → `400 Bad Request` (ProblemDetails).
+- **Endpoint 2 — `PATCH tickets/{TicketKey}`:** partial editing of the ticket. `TicketKey` and `CreatedAt` are not editable — if they come in the body, they are either ignored, or a `400` is returned.
+- **Endpoint 5 — `DELETE tickets/{TicketKey}`:** deletion of an existing ticket. If it doesn't exist → `404`.
 
-- **Endpoint 1 — `POST tickets`:** creare tichet dintr-un DTO care conține `Title`, `Description` și `PriorityId`.
-  - Se validează `Title` (nu null/gol, max 100 caractere).
-  - Se generează un `TicketKey` unic.
-  - `StatusId` se setează automat la `1`, iar `CreatedAt` la data și ora curentă.
-  - `PriorityId` invalid → `400 Bad Request` (ProblemDetails).
-- **Endpoint 2 — `PATCH tickets/{TicketKey}`:** editare parțială a tichetului. `TicketKey` și `CreatedAt` nu sunt editabile — dacă vin în body, fie se ignoră, fie se returnează `400`.
-- **Endpoint 5 — `DELETE tickets/{TicketKey}`:** ștergerea unui tichet existent. Dacă nu există → `404`.
+### SQL Requirements — A
 
-### Cerințe SQL — A
+1. **`sp_CreateTicket`** — parameters: `Title`, `Description`, `PriorityId`.
+    - Generates a unique `TicketKey` directly inside the procedure (e.g.: SQL sequence or logic based on the maximum existing number — the choice will be discussed and argued).
+    - Validates `PriorityId` through an `EXISTS` on the `TicketPriority` table; if the priority does not exist, it throws a custom error that the API translates into `400`.
+    - Inserts the ticket with `StatusId = 1` and automatic `CreatedAt`.
+    - Uses an **explicit transaction** (`BEGIN TRAN` / `COMMIT`), because inserting the ticket and the possible first audit record must be atomic.
 
-1. **`sp_CreateTicket`** — parametri: `Title`, `Description`, `PriorityId`.
-   - Generează `TicketKey` unic direct în interiorul procedurii (ex: secvență SQL sau logică bazată pe numărul maxim existent — alegerea se discută și se argumentează).
-   - Validează `PriorityId` printr-un `EXISTS` pe tabela `TicketPriority`; dacă prioritatea nu există, aruncă o eroare custom pe care API-ul o traduce în `400`.
-   - Inserează tichetul cu `StatusId = 1` și `CreatedAt` automat.
-   - Folosește o **tranzacție explicită** (`BEGIN TRAN` / `COMMIT`), deoarece inserarea tichetului și eventuala primă înregistrare de audit trebuie să fie atomice.
+2. **`sp_UpdateTicket`** — parameters: `TicketKey` and, optionally, `Title`, `Description`, `PriorityId`, `StatusId` (partial update).
+    - Uses `TRY/CATCH` blocks with `THROW`/`RAISERROR` for a non-existent ticket or invalid status/priority values.
+    - Before the update, it reads the old row and inserts it into `TicketAudit`.
+    - The update and the insertion into the audit are done within an **explicit transaction**.
+    - *Advanced level:* the `OUTPUT` clause can be used directly in the `UPDATE` to populate the audit without a separate select.
 
-2. **`sp_UpdateTicket`** — parametri: `TicketKey` și, opțional, `Title`, `Description`, `PriorityId`, `StatusId` (update parțial).
-   - Folosește blocuri `TRY/CATCH` cu `THROW`/`RAISERROR` pentru tichet inexistent sau valori invalide de status/prioritate.
-   - Înainte de update, citește rândul vechi și îl inserează în `TicketAudit`.
-   - Update-ul și inserarea în audit se fac într-o **tranzacție explicită**.
-   - *Nivel avansat:* se poate folosi clauza `OUTPUT` direct în `UPDATE` pentru a popula audit-ul fără un select separat.
+3. **`sp_DeleteTicket`** — deletes the ticket based on the `TicketKey`.
+    - If physical deletion is chosen, the last version of the ticket must be saved in `TicketAudit` **before** the `DELETE`, otherwise the history is lost.
 
-3. **`sp_DeleteTicket`** — șterge tichetul pe baza `TicketKey`.
-   - Dacă se alege ștergerea fizică, ultima versiune a tichetului trebuie salvată în `TicketAudit` **înainte** de `DELETE`, altfel se pierde istoricul.
+### Database level constraints (independent of C# code)
 
-### Constrângeri la nivel de bază de date (independente de codul C#)
+- `UNIQUE` on the `TicketKey` column from the `Ticket` table.
+- `NOT NULL` on `Title`, `StatusId`, `PriorityId`, `CreatedAt`.
+- Default value (`DEFAULT`) for `CreatedAt` = current date.
+- Default value `1` for `StatusId`.
+- Foreign keys from `Ticket` to `TicketStatus` and `TicketPriority`.
+- *(optional)* `CHECK` for the maximum length of the title.
 
-- `UNIQUE` pe coloana `TicketKey` din tabela `Ticket`.
-- `NOT NULL` pe `Title`, `StatusId`, `PriorityId`, `CreatedAt`.
-- Valoare implicită (`DEFAULT`) pentru `CreatedAt` = data curentă.
-- Valoare implicită `1` pentru `StatusId`.
-- Chei străine de la `Ticket` către `TicketStatus` și `TicketPriority`.
-- *(opțional)* `CHECK` pentru lungimea maximă a titlului.
+## B — Read, Audit and Reporting
 
-## Persoana B — Read, Audit și Reporting
+B is responsible for everything related to **reading, aggregation, and history**.
 
-B este responsabil de tot ce înseamnă **citire, agregare și istoric**.
+### Endpoints B
 
-### Endpoint-uri B
+- **Endpoint 3 — `GET tickets`:** retrieves all tickets, with the status and priority displayed as text (not just raw numeric values).
+- **Endpoint 4 — `GET tickets/{TicketKey}`:** retrieves a single ticket. If it doesn't exist → `404`.
+- **Endpoint 7 — `GET tickets/{TicketKey}/audit`:** retrieves the complete modification history for a ticket, chronologically ordered.
 
-- **Endpoint 3 — `GET tickets`:** aduce toate tichetele, cu statusul și prioritatea afișate ca text (nu doar valori numerice brute).
-- **Endpoint 4 — `GET tickets/{TicketKey}`:** aduce un singur tichet. Dacă nu există → `404`.
-- **Endpoint 7 — `GET tickets/{TicketKey}/audit`:** aduce istoricul complet de modificări pentru un tichet, ordonat cronologic.
+### SQL Requirements — B
 
-### Cerințe SQL — B
+1. **`vw_TicketDetails`** (view) — selects the ticket data and merges it, via an `INNER JOIN`, with the status name from `TicketStatus` and the priority name from `TicketPriority`. Used by endpoints 3 and 4; the main reason is avoiding the exposure of raw ids to the client without translation into text.
 
-1. **`vw_TicketDetails`** (view) — selectează datele tichetului și le îmbină, printr-un `INNER JOIN`, cu numele statusului din `TicketStatus` și numele priorității din `TicketPriority`. Folosit de endpoint-urile 3 și 4; motivul principal e evitarea expunerii id-urilor brute către client fără traducere în text.
+2. **`sp_GetTicketByKey`** — parameter: `TicketKey`; selects from the view above. If it finds nothing, the decision to return `404` is made in the C# code, not in the procedure.
 
-2. **`sp_GetTicketByKey`** — parametru: `TicketKey`; selectează din view-ul de mai sus. Dacă nu găsește nimic, decizia de a returna `404` se ia în codul C#, nu în procedură.
+3. **`sp_GetTicketAuditLog`** — parameter: `TicketKey`; does a `JOIN` between `TicketAudit` and `Ticket`, plus a `LEFT JOIN` to `TicketStatus` and `TicketPriority` to translate the old values saved in the audit. A good exercise for `LEFT JOIN` with multiple aliases on the same table, because both the old status and the old priority must be translated separately.
 
-3. **`sp_GetTicketAuditLog`** — parametru: `TicketKey`; face `JOIN` între `TicketAudit` și `Ticket`, plus `LEFT JOIN` către `TicketStatus` și `TicketPriority` pentru a traduce valorile vechi salvate în audit. Exercițiu bun de `LEFT JOIN` cu alias-uri multiple pe același tabel, deoarece atât statusul vechi cât și prioritatea veche trebuie traduse separat.
+4. **Indexing** (must be justified, not just written):
+    - `UNIQUE` index on `TicketKey` from `Ticket` — supports both uniqueness and the searches from endpoints 4 and 7.
+    - Index on the column that links `TicketAudit` to `Ticket`, because `sp_GetTicketAuditLog` filters by this column.
+    - *Oral evaluation question:* why isn't an index also placed on `Title` or `Description`?
 
-4. **Indexare** (trebuie justificată, nu doar scrisă):
-   - Index `UNIQUE` pe `TicketKey` din `Ticket` — susține atât unicitatea, cât și căutările din endpoint-urile 4 și 7.
-   - Index pe coloana care leagă `TicketAudit` de `Ticket`, deoarece `sp_GetTicketAuditLog` filtrează după această coloană.
-   - *Întrebare de evaluare orală:* de ce nu se pune index și pe `Title` sau `Description`?
+5. *(optional, bonus)* Aggregation query with `GROUP BY` and `COUNT` — the number of tickets for each status and each priority. It is not explicitly requested in the initial specification, but it's a good test for `GROUP BY`, `HAVING`, and `JOIN`.
 
-5. *(opțional, bonus)* Interogare de agregare cu `GROUP BY` și `COUNT` — numărul de tichete pe fiecare status și pe fiecare prioritate. Nu este cerută explicit în specificația inițială, dar e un test bun pentru `GROUP BY`, `HAVING` și `JOIN`.
+## Audit Table — Common Design (to be established together)
 
-## Tabela de Audit — Design Comun (se stabilește împreună)
+`TicketAudit` must contain:
 
-`TicketAudit` trebuie să conțină:
+- its own identifier;
+- reference to the original ticket;
+- relevant old fields (title, description, old status, old priority);
+- modification date;
+- modification type (`update` or `delete`).
 
-- identificator propriu;
-- referință către tichetul original;
-- câmpurile vechi relevante (titlu, descriere, status vechi, prioritate veche);
-- data modificării;
-- tipul modificării (`update` sau `delete`).
-
-A scrie în această tabelă, din procedurile de update și delete; B citește din ea, prin procedura de audit log. Acesta este **punctul de integrare** dintre cei doi, iar structura exactă a tabelei trebuie stabilită împreună, înainte de a începe implementarea separată.
-
-## Etape Comune și Integrare Finală
-
-- Fiecare scrie propriile endpoint-uri ca **route groups** separate (ex: unul pentru scriere, altul pentru citire), dar înregistrate în același fișier `Program`.
-- Se recomandă **testare încrucișată**: A testează manual endpoint-urile lui B și invers, folosind Swagger și debugger.
-- La final, fiecare susține o scurtă prezentare (~15-20 min) în care explică deciziile de design SQL luate, în special modul de generare a `TicketKey` și strategia de audit.
-
-### Pași de urmat
-
-1. Se stabilește fundația comună: structura proiectului, tabelele de nomenclator, middleware-ul de erori și configurarea Swagger.
-2. Fiecare scrie scripturile SQL proprii (tabele și proceduri) și le testează direct în SSMS sau Azure Data Studio, independent de API.
-3. Se implementează endpoint-urile în C#, care apelează procedurile stocate.
-4. Integrare — fluxul de audit trebuie să funcționeze de la un capăt la altul (A scrie, B citește).
-5. Code review încrucișat, însoțit de teste manuale din Swagger.
-6. Prezentarea finală.
+A writes to this table, from the update and delete procedures; B reads from it, through the audit log procedure. This is the **integration point** between the two.
