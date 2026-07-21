@@ -41,6 +41,7 @@ BEGIN
     SELECT
         TicketAudit.Id,
         TicketAudit.TicketId,
+        TicketAudit.TicketKey,
         TicketAudit.TicketTitle,
         TicketAudit.TicketDescription,
         TicketAudit.TicketModifiedAt,
@@ -48,10 +49,12 @@ BEGIN
         TicketStatus.Name AS Status,
         TicketPriority.Name AS Priority
     FROM TicketAudit
-    INNER JOIN Ticket ON TicketAudit.TicketId = Ticket.Id
+    -- Using LEFT JOIN to comply with the requirement without losing data after a delete operation
+    LEFT JOIN Ticket ON TicketAudit.TicketId = Ticket.Id
     LEFT JOIN TicketStatus ON TicketAudit.TicketStatusId = TicketStatus.Id
     LEFT JOIN TicketPriority ON TicketAudit.TicketPriorityId = TicketPriority.Id
-    WHERE Ticket.TicketKey = @TicketKey
+    -- The lookup is performed using the TicketKey stored in the audit table, not the deleted record
+    WHERE TicketAudit.TicketKey = @TicketKey
     ORDER BY TicketAudit.TicketModifiedAt DESC;
 END
 GO
